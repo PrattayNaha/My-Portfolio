@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prattay Naha - Enter The Matrix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff41;
+            overflow-x: hidden;
+            cursor: crosshair;
+        }
+
+        /* Matrix Rain Background */
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.15;
+        }
+
+        /* Entry Screen */
+        #entry-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s;
+        }
+
+        #entry-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #globe-container {
+            width: 400px;
+            height: 400px;
+            position: relative;
+        }
+
+        .press-key {
+            margin-top: 40px;
+            font-size: 24px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            animation: flicker 2s infinite, glitch 3s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 2px); }
+            94% { transform: translate(2px, -2px); }
+            96% { transform: translate(-2px, -2px); }
+        }
+
+        /* Main Content */
+        #main-content {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        #main-content.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            border-bottom: 2px solid #00ff41;
+            position: relative;
+        }
+
+        h1 {
+            font-size: clamp(32px, 6vw, 64px);
+            text-shadow: 0 0 20px #00ff41;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px #00ff41; }
+            50% { text-shadow: 0 0 40px #00ff41, 0 0 60px #00ff41; }
+        }
+
+        .subtitle {
+            font-size: clamp(16px, 2vw, 24px);
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            padding: 12px 24px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:before {
+            content: '> ';
+            position: absolute;
+            left: 8px;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #00ff41;
+            color: #000;
+            box-shadow: 0 0 20px #00ff41;
+            padding-left: 32px;
+        }
+
+        .nav-btn:hover:before {
+            opacity: 1;
+            left: 12px;
+        }
+
+        .nav-btn.active {
+            background: #00ff41;
+            color: #000;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Terminal Cards */
+        .terminal-card {
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px solid #00ff41;
+            padding: 30px;
+            margin: 30px 0;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            transition: all 0.3s;
+        }
+
+        .terminal-card:hover {
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.6);
+            transform: translateY(-5px);
+        }
+
+        .terminal-card:before {
+            content: '█';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .card-title {
+            font-size: clamp(20px, 3vw, 28px);
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .card-title:before {
+            content: '$ ';
+            color: #00ff41;
+        }
+
+        .card-content {
+            line-height: 1.8;
+            font-size: clamp(14px, 2vw, 16px);
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tech-tag {
+            background: transparent;
+            border: 1px solid #00ff41;
+            padding: 6px 12px;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .tech-tag:hover {
+            background: #00ff41;
+            color: #000;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        /* Links */
+        a {
+            color: #00ff41;
+            text-decoration: none;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        a:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00ff41;
+            transition: width 0.3s;
+        }
+
+        a:hover:after {
+            width: 100%;
+        }
+
+        a:hover {
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        /* Contact Section */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .contact-item {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #00ff41;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .contact-item:hover {
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+        }
+
+        /* Scanline Effect */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 255, 65, 0.03) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 999;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            from { transform: translateY(0); }
+            to { transform: translateY(4px); }
+        }
+
+        /* Sound Toggle */
+        #sound-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        #sound-toggle:hover {
+            background: #00ff41;
+            color: #000;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #globe-container {
+                width: 280px;
+                height: 280px;
+            }
+
+            .press-key {
+                font-size: 18px;
+            }
+
+            nav {
+                gap: 10px;
+            }
+
+            .nav-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .terminal-card {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .typing {
+            overflow: hidden;
+            border-right: 2px solid #00ff41;
+            white-space: nowrap;
+            animation: typing 2s steps(40, end), blink-caret 0.75s step-end infinite;
+            display: inline-block;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #00ff41; }
+        }
+
+        /* Glitch Effect */
+        .glitch {
+            animation: glitch-anim 0.3s;
+        }
+
+        @keyframes glitch-anim {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
+            100% { transform: translate(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Matrix Rain Background -->
+    <canvas id="matrix-bg"></canvas>
+
+    <!-- Scanline Effect -->
+    <div class="scanline"></div>
+
+    <!-- Entry Screen -->
+    <div id="entry-screen">
+        <div id="globe-container"></div>
+        <div class="press-key">PRESS ANY KEY TO ENTER</div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <header>
+            <h1>PRATTAY NAHA</h1>
+            <div class="subtitle">AI/ML ENGINEER • BACKEND DEVELOPER • EEE GRADUATE</div>
+        </header>
+
+        <nav>
+            <button class="nav-btn active" onclick="showSection('about')">ABOUT</button>
+            <button class="nav-btn" onclick="showSection('projects')">PROJECTS</button>
+            <button class="nav-btn" onclick="showSection('research')">RESEARCH</button>
+            <button class="nav-btn" onclick="showSection('skills')">SKILLS</button>
+            <button class="nav-btn" onclick="showSection('contact')">CONTACT</button>
+        </nav>
+
+        <!-- About Section -->
+        <section id="about" class="section active">
+            <div class="terminal-card">
+                <h2 class="card-title">system.info</h2>
+                <div class="card-content">
+                    <p>> Backend Developer proficient in Django and Python, with proven experience building robust CRUD applications, implementing secure authentication systems, and designing scalable database architectures.</p>
+                    <br>
+                    <p>> Skilled in REST API development, optimizing backend performance, and integrating third-party tools. Strong understanding of clean architecture, debugging, and delivering maintainable, production-ready backend solutions.</p>
+                    <br>
+                    <p>> Fresh graduate from International Islamic University Chittagong (IIUC) with a Bachelor's in Electrical and Electronic Engineering (CGPA: 3.63/4.00).</p>
+                </div>
+            </div>
+
+            <div class="terminal-card">
+                <h2 class="card-title">education.log</h2>
+                <div class="card-content">
+                    <p><strong>Bachelor in Electrical and Electronic Engineering</strong></p>
+                    <p>International Islamic University Chittagong (IIUC)</p>
+                    <p>November 2019 - July 2024</p>
+                    <p>CGPA: 3.63/4.00</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" class="section">
+            <div class="grid">
+                <div class="terminal-card">
+                    <h2 class="card-title">TechJournal</h2>
+                    <div class="card-content">
+                        <p>> Full-stack Django blog application with complete CRUD operations</p>
+                        <p>> Robust user authentication and personalized experiences</p>
+                        <p>> Rich content management with image support</p>
+                        <p>> Scalable, categorized data structure</p>
+                        <br>
+                        <p><a href="https://blog-project-1-eoy1.onrender.com/" target="_blank">[ LIVE DEMO ]</a></p>
+                        <p><a href="https://github.com/PrattayNaha/Blog-Project" target="_blank">[ VIEW CODE ]</a></p>
+                    </div>
+                    <div class="tech-stack">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">Django</span>
+                        <span class="tech-tag">SQLite</span>
+                        <span class="tech-tag">Bootstrap</span>
+                        <span class="tech-tag">JavaScript</span>
+                    </div>
+                </div>
+
+                <div class="terminal-card">
+                    <h2 class="card-title">NoteSphere</h2>
+                    <div class="card-content">
+                        <p>> Full-stack Django app with rich text editing</p>
+                        <p>> Media upload capabilities</p>
+                        <p>> Scalable data models following DRY principles</p>
+                        <p>> Integrated third-party libraries for enhanced functionality</p>
+                        <br>
+                        <p><a href="https://github.com/PrattayNaha/NoteSphere" target="_blank">[ VIEW CODE ]</a></p>
+                    </div>
+                    <div class="tech-stack">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">Django</span>
+                        <span class="tech-tag">SQLite</span>
+                        <span class="tech-tag">Bootstrap</span>
+                        <span class="tech-tag">JavaScript</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Research Section -->
+        <section id="research" class="section">
+            <div class="terminal-card">
+                <h2 class="card-title">Sperm Cell Detection & Counting Using YOLO</h2>
+                <div class="card-content">
+                    <p><strong>B.Sc. Thesis | IIUC | Unpublished</strong></p>
+                    <br>
+                    <p>> Implemented YOLOv8 and YOLOv9 models for detecting and classifying sperm cells into several categories</p>
+                    <p>> Developed a separate counting system for different sperm classes in video sequences</p>
+                    <p>> Applied deep learning for real-world medical applications</p>
+                </div>
+                <div class="tech-stack">
+                    <span class="tech-tag">YOLOv8</span>
+                    <span class="tech-tag">YOLOv9</span>
+                    <span class="tech-tag">Computer Vision</span>
+                    <span class="tech-tag">Object Detection</span>
+                    <span class="tech-tag">Python</span>
+                </div>
+            </div>
+
+            <div class="terminal-card">
+                <h2 class="card-title">CNN-LSTM-Based ECG Signal Classification</h2>
+                <div class="card-content">
+                    <p><strong>Conference Paper | Unpublished</strong></p>
+                    <br>
+                    <p>> Implemented CNN layers to capture spatial features of ECG signals, followed by LSTM layers</p>
+                    <p>> Demonstrated the potential of deep learning in improving automated ECG classification systems</p>
+                    <p>> Applied for clinical and real-time health monitoring scenarios</p>
+                </div>
+                <div class="tech-stack">
+                    <span class="tech-tag">CNN</span>
+                    <span class="tech-tag">LSTM</span>
+                    <span class="tech-tag">Deep Learning</span>
+                    <span class="tech-tag">Medical AI</span>
+                    <span class="tech-tag">Python</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills" class="section">
+            <div class="terminal-card">
+                <h2 class="card-title">technical.skills</h2>
+                <div class="card-content">
+                    <p><strong>>> AI/ML</strong></p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">YOLOv8</span>
+                        <span class="tech-tag">YOLOv9</span>
+                        <span class="tech-tag">CNN</span>
+                        <span class="tech-tag">LSTM</span>
+                        <span class="tech-tag">Computer Vision</span>
+                        <span class="tech-tag">Deep Learning</span>
+                    </div>
+                    <br>
+                    <p><strong>>> Programming Languages</strong></p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">JavaScript</span>
+                        <span class="tech-tag">C</span>
+                    </div>
+                    <br>
+                    <p><strong>>> Backend Development</strong></p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">Django</span>
+                        <span class="tech-tag">REST APIs</span>
+                        <span class="tech-tag">JWT</span>
+                        <span class="tech-tag">Django ORM</span>
+                    </div>
+                    <br>
+                    <p><strong>>> Frontend Development</strong></p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">HTML5</span>
+                        <span class="tech-tag">CSS3</span>
+                        <span class="tech-tag">Bootstrap</span>
+                        <span class="tech-tag">JavaScript</span>
+                    </div>
+                    <br>
+                    <p><strong>>> Database & Tools</strong></p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">PostgreSQL</span>
+                        <span class="tech-tag">SQLite</span>
+                        <span class="tech-tag">Git</span>
+                        <span class="tech-tag">GitHub</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal-card">
+                <h2 class="card-title">core.competencies</h2>
+                <div class="card-content">
+                    <p>> Technical Documentation & Maintenance</p>
+                    <p>> Team Collaboration & Communication</p>
+                    <p>> Project Management</p>
+                    <p>> Problem Solving & Critical Thinking</p>
+                    <p>> Self-Motivation & Initiative</p>
+                    <p>> Time Management & Prioritization</p>
+                    <p>> English (Fluent Working Proficiency)</p>
+                    <p>> Bengali (Native Language)</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="section">
+            <div class="terminal-card">
+                <h2 class="card-title">contact.info</h2>
+                <div class="contact-grid">
+                    <div class="contact-item">
+                        <p><strong>PHONE</strong></p>
+                        <p><a href="tel:+8801619122782">+880 1619 122782</a></p>
+                    </div>
+                    <div class="contact-item">
+                        <p><strong>EMAIL</strong></p>
+                        <p><a href="mailto:prattay26@gmail.com">prattay26@gmail.com</a></p>
+                    </div>
+                    <div class="contact-item">
+                        <p><strong>LOCATION</strong></p>
+                        <p>Chattogram, Bangladesh</p>
+                    </div>
+                    <div class="contact-item">
+                        <p><strong>GITHUB</strong></p>
+                        <p><a href="https://github.com/PrattayNaha" target="_blank">github.com/PrattayNaha</a></p>
+                    </div>
+                    <div class="contact-item">
+                        <p><strong>LINKEDIN</strong></p>
+                        <p><a href="https://www.linkedin.com/in/prattay-naha-7p/" target="_blank">linkedin.com/in/prattay-naha-7p</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Sound Toggle -->
+    <button id="sound-toggle">SOUND: ON</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Sound System
+        let soundEnabled = true;
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playBeep(frequency = 800, duration = 50) {
+            if (!soundEnabled) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration / 1000);
+        }
+
+        document.getElementById('sound-toggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.textContent = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
+            playBeep(soundEnabled ? 1000 : 400);
+        });
+
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#00ff41';
+            ctx.font = fontSize + 'px monospace';
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 35);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // 3D Globe with Three.js
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        const container = document.getElementById('globe-container');
+        renderer.setSize(container.offsetWidth, container.offsetHeight);
+        container.appendChild(renderer.domElement);
+
+        // Create code particles
+        const particleCount = 2000;
+        const particles = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        
+        for (let i = 0; i < particleCount * 3; i++) {
+            positions[i] = (Math.random() - 0.5) * 10;
+        }
+        
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        
+        const particleMaterial = new THREE.PointsMaterial({
+            color: 0x00ff41,
+            size: 0.05,
+        });
+        
+        const particleSystem = new THREE.Points(particles, particleMaterial);
+        scene.add(particleSystem);
+
+        camera.position.z = 5;
+
+        function animateGlobe() {
+            requestAnimationFrame(animateGlobe);
+            particleSystem.rotation.y += 0.001;
+            particleSystem.rotation.x += 0.0005;
+            renderer.render(scene, camera);
+        }
+        animateGlobe();
+
+        // Entry Screen Interaction
+        let hasEntered = false;
+
+        function enterSite() {
+            if (hasEntered) return;
+            hasEntered = true;
+            
+            playBeep(1200, 100);
+            setTimeout(() => playBeep(1500, 150), 100);
+            
+            document.getElementById('entry-screen').classList.add('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('main-content').classList.add('active');
+            }, 1000);
+        }
+
+        document.addEventListener('keydown', enterSite);
+        document.getElementById('entry-screen').addEventListener('click', enterSite);
+
+        // Navigation
+        function showSection(sectionId) {
+            playBeep();
+            
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Glitch effect
+            const section = document.getElementById(sectionId);
+            section.classList.add('glitch');
+            setTimeout(() => section.classList.remove('glitch'), 300);
+        }
+
+        // Add sound effects to all interactive elements
+        document.querySelectorAll('button, a, .terminal-card').forEach(el => {
+            el.addEventListener('mouseenter', () => playBeep(600, 30));
+            el.addEventListener('click', () => playBeep(1000, 50));
+        });
+
+        // Glitch effect on random intervals
+        setInterval(() => {
+            const cards = document.querySelectorAll('.terminal-card');
+            const randomCard = cards[Math.floor(Math.random() * cards.length)];
+            if (randomCard) {
+                randomCard.classList.add('glitch');
+                setTimeout(() => randomCard.classList.remove('glitch'), 300);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
